@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Lyric Copy Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .song-info h2 {
+            color: #333;
+            margin: 0;
+        }
+
+        .song-info p {
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+
+        .copy-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .copy-btn.copied {
+            background: #4CAF50;
+        }
+
+        .lyrics-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .paragraph {
+            margin-bottom: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .paragraph:hover {
+            background: #e9ecef;
+        }
+
+        .lrc-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Lyric Copy Tool</h1>
+        <p class="subtitle">Tìm lời bài hát - Copy dễ dàng - Làm video nhanh chóng</p>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Ví dụ: Sơn Tùng M-TP - Chắc Ai Đó Sẽ Về"
+                onkeypress="if(event.key==='Enter') searchLyrics()"
+            >
+            <button onclick="searchLyrics()" id="searchBtn">Tìm</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function searchLyrics() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Vui lòng nhập tên bài hát!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Đang tìm...';
+            resultDiv.innerHTML = '<div class="loading">🔍 Đang tìm kiếm...</div>';
+
+            try {
+                // Parse query: "Artist - Song" hoặc chỉ "Song"
+                const parts = query.split('-');
+                const artist = parts[0]?.trim() || '';
+                const song = parts[1]?.trim() || query;
+
+                const response = await fetch(
+                    `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Không tìm thấy lời bài hát');
+                }
+
+                const data = await response.json();
+                displayLyrics(data.lyrics, song, artist);
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Không tìm thấy lời bài hát.<br>
+                        Thử cú pháp: "Tên ca sĩ - Tên bài hát"
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Tìm';
+            }
+        }
+
+        function displayLyrics(lyrics, song, artist) {
+            const resultDiv = document.getElementById('result');
+            
+            const paragraphs = lyrics.split('\n\n').filter(p => p.trim());
+            
+            resultDiv.innerHTML = `
+                <div class="result-header">
+                    <div class="song-info">
+                        <h2>${song}</h2>
+                        <p>${artist}</p>
+                    </div>
+                    <button class="copy-btn" onclick="copyAll()">📋 Copy tất cả</button>
+                </div>
+
+                <div class="lyrics-container">
+                    ${paragraphs.map((p, i) => `
+                        <div class="paragraph" onclick="copyParagraph(this)" title="Click để copy đoạn này">
+                            ${p}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <button class="lrc-btn" onclick="alert('Tính năng tạo LRC sẽ được thêm sau!')">
+                    🎬 Tạo LRC từ bài này (Coming soon)
+                </button>
+            `;
+
+            // Lưu lyrics vào biến global để copy
+            window.currentLyrics = lyrics;
+        }
+
+        function copyAll() {
+            if (!window.currentLyrics) return;
+            
+            navigator.clipboard.writeText(window.currentLyrics).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓ Đã copy!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy tất cả';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function copyParagraph(element) {
+            const text = element.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const originalBg = element.style.background;
+                element.style.background = '#4CAF50';
+                element.style.color = 'white';
+                
+                setTimeout(() => {
+                    element.style.background = originalBg;
+                    element.style.color = '';
+                }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
