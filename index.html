@@ -1,403 +1,197 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Lyric Copy Tool</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2.5rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        input:focus, textarea:focus {
-            border-color: #667eea;
-        }
-
-        textarea {
-            min-height: 200px;
-            resize: vertical;
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #5568d3;
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .song-info h2 {
-            color: #333;
-            margin: 0;
-        }
-
-        .song-info p {
-            color: #666;
-            margin: 5px 0 0 0;
-        }
-
-        .copy-btn {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .copy-btn.copied {
-            background: #4CAF50;
-        }
-
-        .lyrics-container {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            max-height: 500px;
-            overflow-y: auto;
-            line-height: 1.8;
-            font-size: 16px;
-        }
-
-        .paragraph {
-            margin-bottom: 20px;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .paragraph:hover {
-            background: #e9ecef;
-        }
-
-        .lrc-btn {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .error {
-            color: #d32f2f;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .contribute-box {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .contribute-box h3 {
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .contribute-box p {
-            color: #856404;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .source-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            background: #28a745;
-            color: white;
-            border-radius: 5px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lyric & LRC Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0f1117;color:#e6e6e6;padding:16px;line-height:1.6}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:4px}
+.sub{color:#8b93a7;font-size:.9rem;margin-bottom:20px}
+.bar{display:flex;gap:8px;margin-bottom:16px}
+input,textarea{width:100%;padding:12px;font-size:16px;background:#1a1d27;border:1px solid #2c3140;border-radius:10px;color:#e6e6e6;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#5b7cfa}
+textarea{min-height:220px;resize:vertical;line-height:1.7}
+button{padding:12px 18px;font-size:15px;font-weight:600;background:#5b7cfa;color:#fff;border:0;border-radius:10px;cursor:pointer;white-space:nowrap}
+button:disabled{background:#3a3f52;cursor:not-allowed}
+button.ghost{background:#242836;color:#c8cede}
+button.sm{padding:7px 12px;font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.chip{padding:6px 12px;background:#1a1d27;border:1px solid #2c3140;border-radius:99px;font-size:13px;cursor:pointer;color:#a8b0c4}
+.card{background:#171a24;border:1px solid #262b38;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer}
+.card:active{background:#1e2230}
+.card b{display:block;font-size:1rem}
+.card span{color:#8b93a7;font-size:.85rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px;vertical-align:middle}
+.lrc{background:#1e7a4a;color:#c9f5dd}
+.txt{background:#4a4f63;color:#d5d9e6}
+.inst{background:#7a5a1e;color:#f5e3c9}
+.panel{background:#171a24;border:1px solid #262b38;border-radius:12px;padding:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.lyrics{background:#12141c;border-radius:10px;padding:14px;max-height:52vh;overflow-y:auto;white-space:pre-wrap;font-size:16px}
+.stanza{padding:8px;border-radius:8px;margin-bottom:12px;cursor:pointer}
+.stanza:active{background:#232838}
+.ts{color:#5b7cfa;font-family:ui-monospace,monospace;font-size:.85em;margin-right:8px}
+.muted{color:#8b93a7;font-size:.85rem}
+.err{color:#ff8b8b;padding:12px 0}
+a{color:#7d9bff}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎵 Lyric Copy Tool</h1>
-        <p class="subtitle">Tìm lời bài hát - Copy dễ dàng - Làm video nhanh chóng</p>
+<div class="wrap">
+  <h1>🎵 Lyric & LRC Tool</h1>
+  <p class="sub">Tìm lời · Copy 1 chạm · Tải .lrc / .srt cho video &amp; karaoke</p>
 
-        <div class="search-box">
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Ví dụ: Sơn Tùng M-TP - Chắc Ai Đó Sẽ Về"
-                onkeypress="if(event.key==='Enter') searchLyrics()"
-            >
-            <button onclick="searchLyrics()" id="searchBtn">Tìm</button>
-        </div>
+  <div class="bar">
+    <input id="q" placeholder="Tên bài hoặc ca sĩ…" autocomplete="off">
+    <button id="btn" onclick="doSearch()">Tìm</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="out"><p class="muted">Đang tải gợi ý…</p></div>
+</div>
 
-        <div id="result"></div>
-    </div>
+<script>
+const API = 'https://lrclib.net/api';
+const out = document.getElementById('out');
+const qEl = document.getElementById('q');
+const btn = document.getElementById('btn');
+let cur = null, showTS = false;
 
-    <script>
-        // Database lưu trữ lyric do người dùng đóng góp
-        let userLyricsDB = JSON.parse(localStorage.getItem('userLyricsDB') || '{}');
+/* ---------- utils ---------- */
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss = s => s ? `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}` : '';
 
-        async function searchLyrics() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) {
-                alert('Vui lòng nhập tên bài hát!');
-                return;
-            }
+function parseLRC(lrc){
+  const rows = [];
+  for (const raw of (lrc||'').split('\n')){
+    const m = raw.match(/^((?:\[\d+:\d+(?:\.\d+)?\])+)(.*)$/);
+    if(!m) continue;
+    const text = m[2].trim();
+    for (const t of m[1].match(/\[(\d+):(\d+(?:\.\d+)?)\]/g)){
+      const p = t.slice(1,-1).split(':');
+      rows.push({ time: +p[0]*60 + parseFloat(p[1]), text });
+    }
+  }
+  return rows.sort((a,b)=>a.time-b.time);
+}
+const fmtLRC = t => `[${String(Math.floor(t/60)).padStart(2,'0')}:${(t%60).toFixed(2).padStart(5,'0')}]`;
+function toSRT(rows){
+  const srtT = t => `${String(Math.floor(t/3600)).padStart(2,'0')}:${String(Math.floor(t/60)%60).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')},${String(Math.round(t%1*1000)).padStart(3,'0')}`;
+  return rows.map((r,i)=>{
+    const end = rows[i+1] ? Math.max(r.time+0.5, rows[i+1].time-0.08) : r.time+4;
+    return `${i+1}\n${srtT(r.time)} --> ${srtT(end)}\n${r.text||'♪'}\n`;
+  }).join('\n');
+}
+async function copy(text, el){
+  try{ await navigator.clipboard.writeText(text); }
+  catch{ const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  if(el){ const o=el.textContent; el.textContent='✓ Đã copy'; setTimeout(()=>el.textContent=o,1400); }
+}
+function download(name, text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));
+  a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
 
-            const resultDiv = document.getElementById('result');
-            const searchBtn = document.getElementById('searchBtn');
-            
-            searchBtn.disabled = true;
-            searchBtn.textContent = 'Đang tìm...';
-            resultDiv.innerHTML = '<div class="loading">🔍 Đang tìm kiếm...</div>';
+/* ---------- search ---------- */
+qEl.addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
 
-            try {
-                // Parse query
-                const parts = query.split('-');
-                const artist = parts[0]?.trim() || '';
-                const song = parts[1]?.trim() || query;
-                const key = `${artist}-${song}`.toLowerCase();
+async function doSearch(q){
+  const query = (q ?? qEl.value).trim();
+  if(!query) return;
+  qEl.value = query;
+  btn.disabled = true; out.innerHTML = '<p class="muted">🔍 Đang tìm…</p>';
+  try{
+    const r = await fetch(`${API}/search?q=${encodeURIComponent(query)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const list = await r.json();
+    if(!list.length){
+      out.innerHTML = `<p class="err">Không tìm thấy “${esc(query)}” trong LRCLIB.</p>
+        <div class="panel"><p class="muted" style="margin-bottom:10px">Bạn có lời sẵn? Dán vào để copy / tải .txt, hoặc tìm nguồn rồi đóng góp lại.</p>
+        <button class="ghost" onclick="pasteBox()">📝 Dán lời thủ công</button>
+        <button class="ghost" onclick="window.open('https://www.google.com/search?q='+encodeURIComponent('${esc(query)} lyrics'),'_blank')">🔍 Tìm trên Google</button></div>`;
+      return;
+    }
+    out.innerHTML = `<p class="muted" style="margin-bottom:10px">${list.length} kết quả · bấm để mở</p>` +
+      list.slice(0,40).map(t=>`
+        <div class="card" onclick="openTrack(${t.id})">
+          <b>${esc(t.trackName)}${t.syncedLyrics?'<span class="badge lrc">LRC</span>':t.instrumental?'<span class="badge inst">INST</span>':'<span class="badge txt">TEXT</span>'}</b>
+          <span>${esc(t.artistName)}${t.albumName?' · '+esc(t.albumName):''}${t.duration?' · '+mmss(t.duration):''}</span>
+        </div>`).join('');
+  }catch(e){
+    out.innerHTML = `<p class="err">Lỗi kết nối LRCLIB (${esc(e.message)}). Thử lại sau ít phút.</p>`;
+  }finally{ btn.disabled = false; }
+}
 
-                // 1. Kiểm tra database người dùng trước
-                if (userLyricsDB[key]) {
-                    displayLyrics(userLyricsDB[key].lyrics, song, artist, 'Cộng đồng');
-                    return;
-                }
+/* ---------- detail ---------- */
+async function openTrack(id){
+  out.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const r = await fetch(`${API}/get/${id}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    cur = await r.json(); showTS = !!cur.syncedLyrics; render();
+  }catch(e){ out.innerHTML = `<p class="err">Không tải được bài này (${esc(e.message)}).</p>`; }
+}
 
-                // 2. Thử API lyrics.ovh
-                const response = await fetch(
-                    `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`
-                );
+function render(){
+  const plain = cur.plainLyrics || '';
+  const synced = cur.syncedLyrics || '';
+  const text = showTS && synced ? synced : plain;
+  const slug = `${cur.artistName} - ${cur.trackName}`.replace(/[\\/:*?"<>|]/g,'_');
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.lyrics && data.lyrics.trim()) {
-                        displayLyrics(data.lyrics, song, artist, 'API');
-                        return;
-                    }
-                }
+  let body;
+  if(!text){
+    body = `<p class="muted">${cur.instrumental?'🎼 Bài này là nhạc không lời (instrumental).':'⚠️ Chưa có lời cho bài này.'}</p>`;
+  } else if(showTS && synced){
+    body = `<div class="lyrics">` + parseLRC(synced).map(r=>
+      `<div class="stanza" onclick="copy(${JSON.stringify(r.text)},this)"><span class="ts">${fmtLRC(r.time)}</span>${esc(r.text)||'♪'}</div>`).join('') + `</div>`;
+  } else {
+    body = `<div class="lyrics">` + plain.split(/\n\s*\n/).filter(s=>s.trim()).map(s=>
+      `<div class="stanza" onclick="copy(this.innerText,this)">${esc(s)}</div>`).join('') + `</div>`;
+  }
 
-                // 3. Nếu không tìm thấy, hiện form đóng góp
-                showContributeForm(song, artist);
+  out.innerHTML = `
+    <button class="ghost sm" onclick="doSearch()" style="margin-bottom:12px">← Kết quả</button>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div><b style="font-size:1.15rem">${esc(cur.trackName)}</b><br><span class="muted">${esc(cur.artistName)}${cur.duration?' · '+mmss(cur.duration):''}</span></div>
+      </div>
+      <div class="row">
+        <button onclick="copy(${JSON.stringify(text)},this)">📋 Copy ${showTS&&synced?'LRC':'toàn bộ'}</button>
+        ${synced?`<button class="ghost" onclick="showTS=!showTS;render()">${showTS?'Ẩn timestamp':'Hiện timestamp'}</button>`:''}
+        ${synced?`<button class="ghost" onclick="download(${JSON.stringify(slug+'.lrc')},${JSON.stringify(synced)})">⬇ .lrc</button>
+                  <button class="ghost" onclick="download(${JSON.stringify(slug+'.srt')},toSRT(parseLRC(${JSON.stringify(synced)})))">⬇ .srt</button>`:''}
+        ${plain?`<button class="ghost" onclick="download(${JSON.stringify(slug+'.txt')},${JSON.stringify(plain)})">⬇ .txt</button>`:''}
+      </div>
+      ${body}
+      <p class="muted" style="margin-top:12px">Nguồn: <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a> · Lời bài hát thuộc bản quyền tác giả. Dùng cho mục đích cá nhân / học tập.</p>
+    </div>`;
+}
 
-            } catch (error) {
-                showContributeForm(song, artist);
-            } finally {
-                searchBtn.disabled = false;
-                searchBtn.textContent = 'Tìm';
-            }
-        }
+/* ---------- paste fallback ---------- */
+function pasteBox(){
+  out.innerHTML = `<div class="panel">
+    <p class="muted" style="margin-bottom:10px">Dán lời vào đây. Mỗi khổ cách nhau 1 dòng trống. Nội dung lưu trên máy bạn.</p>
+    <textarea id="ta" placeholder="Dán lời bài hát…"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button onclick="const v=document.getElementById('ta').value.trim(); if(!v)return; cur={trackName:'Lời của bạn',artistName:'',plainLyrics:v,syncedLyrics:''}; showTS=false; render();">Xem &amp; Copy</button>
+    </div></div>`;
+}
 
-        function showContributeForm(song, artist) {
-            const resultDiv = document.getElementById('result');
-            
-            resultDiv.innerHTML = `
-                <div class="error">
-                    ❌ Không tìm thấy lời bài hát "${song}" của ${artist}
-                </div>
-
-                <div class="contribute-box">
-                    <h3>🤝 Đóng góp lời bài hát</h3>
-                    <p>Hãy giúp cộng đồng bằng cách paste lời bài hát vào đây. Lời của bạn sẽ được lưu lại và giúp ích cho những người khác!</p>
-                    
-                    <textarea 
-                        id="contributeLyrics" 
-                        placeholder="Dán lời bài hát vào đây...&#10;&#10;Mỗi đoạn cách nhau bằng 1 dòng trống"
-                    ></textarea>
-
-                    <div class="btn-group">
-                        <button onclick="saveContribution('${song}', '${artist}')" style="flex: 1;">
-                            💾 Lưu & Hiển thị
-                        </button>
-                        <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(song + ' ' + artist + ' lyrics')}', '_blank')" class="btn-secondary" style="flex: 1;">
-                            🔍 Tìm trên Google
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function saveContribution(song, artist) {
-            const lyrics = document.getElementById('contributeLyrics').value.trim();
-            
-            if (!lyrics) {
-                alert('Vui lòng nhập lời bài hát!');
-                return;
-            }
-
-            const key = `${artist}-${song}`.toLowerCase();
-            
-            // Lưu vào database
-            userLyricsDB[key] = {
-                lyrics: lyrics,
-                song: song,
-                artist: artist,
-                contributedAt: new Date().toISOString()
-            };
-            
-            localStorage.setItem('userLyricsDB', JSON.stringify(userLyricsDB));
-            
-            // Hiển thị lyric
-            displayLyrics(lyrics, song, artist, 'Cộng đồng');
-            
-            alert('✅ Cảm ơn bạn đã đóng góp! Lời bài hát đã được lưu lại.');
-        }
-
-        function displayLyrics(lyrics, song, artist, source) {
-            const resultDiv = document.getElementById('result');
-            
-            const paragraphs = lyrics.split('\n\n').filter(p => p.trim());
-            
-            resultDiv.innerHTML = `
-                <div class="result-header">
-                    <div class="song-info">
-                        <h2>${song} <span class="source-badge">Nguồn: ${source}</span></h2>
-                        <p>${artist}</p>
-                    </div>
-                    <button class="copy-btn" onclick="copyAll()">📋 Copy tất cả</button>
-                </div>
-
-                <div class="lyrics-container">
-                    ${paragraphs.map((p, i) => `
-                        <div class="paragraph" onclick="copyParagraph(this)" title="Click để copy đoạn này">
-                            ${p}
-                        </div>
-                    `).join('')}
-                </div>
-
-                <button class="lrc-btn" onclick="alert('Tính năng tạo LRC sẽ được thêm sau!')">
-                    🎬 Tạo LRC từ bài này (Coming soon)
-                </button>
-            `;
-
-            // Lưu lyrics vào biến global để copy
-            window.currentLyrics = lyrics;
-        }
-
-        function copyAll() {
-            if (!window.currentLyrics) return;
-            
-            navigator.clipboard.writeText(window.currentLyrics).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                btn.textContent = '✓ Đã copy!';
-                btn.classList.add('copied');
-                
-                setTimeout(() => {
-                    btn.textContent = '📋 Copy tất cả';
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        function copyParagraph(element) {
-            const text = element.textContent.trim();
-            navigator.clipboard.writeText(text).then(() => {
-                const originalBg = element.style.background;
-                element.style.background = '#4CAF50';
-                element.style.color = 'white';
-                
-                setTimeout(() => {
-                    element.style.background = originalBg;
-                    element.style.color = '';
-                }, 500);
-            });
-        }
-    </script>
+/* ---------- discover (không nhúng lyric nào) ---------- */
+const seeds = ['yêu','mưa','love','night','nhớ','dream','buồn','home'];
+document.getElementById('chips').innerHTML = seeds.map(s=>`<span class="chip" onclick="doSearch('${s}')">${s}</span>`).join('');
+(async()=>{
+  try{
+    const r = await fetch(`${API}/search?q=${encodeURIComponent(seeds[Math.floor(Math.random()*seeds.length)])}`);
+    const list = (await r.json()).filter(t=>t.syncedLyrics).slice(0,8);
+    if(!list.length){ out.innerHTML='<p class="muted">Nhập tên bài để bắt đầu.</p>'; return; }
+    out.innerHTML = `<p class="muted" style="margin-bottom:10px">🎧 Có sẵn LRC — thử bấm một bài</p>` +
+      list.map(t=>`<div class="card" onclick="openTrack(${t.id})"><b>${esc(t.trackName)}<span class="badge lrc">LRC</span></b><span>${esc(t.artistName)}</span></div>`).join('');
+  }catch{ out.innerHTML='<p class="muted">Nhập tên bài để bắt đầu.</p>'; }
+})();
+</script>
 </body>
 </html>
