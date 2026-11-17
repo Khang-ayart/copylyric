@@ -46,7 +46,7 @@ a{color:#7d9bff}
 
   <div class="bar">
     <input id="q" placeholder="Tên bài hoặc ca sĩ…" autocomplete="off">
-    <button id="btn" onclick="doSearch()">Tìm</button>
+    <button id="btn">Tìm</button>
   </div>
   <div class="chips" id="chips"></div>
   <div id="out"><p class="muted">Đang tải gợi ý…</p></div>
@@ -77,6 +77,7 @@ function parseLRC(lrc){
   return rows.sort((a,b)=>a.time-b.time);
 }
 const fmtLRC = t => `[${String(Math.floor(t/60)).padStart(2,'0')}:${(t%60).toFixed(2).padStart(5,'0')}]`;
+
 function toSRT(rows){
   const srtT = t => `${String(Math.floor(t/3600)).padStart(2,'0')}:${String(Math.floor(t/60)%60).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')},${String(Math.round(t%1*1000)).padStart(3,'0')}`;
   return rows.map((r,i)=>{
@@ -84,42 +85,61 @@ function toSRT(rows){
     return `${i+1}\n${srtT(r.time)} --> ${srtT(end)}\n${r.text||'♪'}\n`;
   }).join('\n');
 }
-async function copy(text, el){
+
+async function copyText(text, el){
   try{ await navigator.clipboard.writeText(text); }
   catch{ const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
   if(el){ const o=el.textContent; el.textContent='✓ Đã copy'; setTimeout(()=>el.textContent=o,1400); }
 }
-function download(name, text){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));
-  a.download=name; a.click(); URL.revokeObjectURL(a.href);
+
+function downloadFile(name, text){
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
 /* ---------- search ---------- */
+btn.addEventListener('click', doSearch);
 qEl.addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
 
 async function doSearch(q){
   const query = (q ?? qEl.value).trim();
   if(!query) return;
   qEl.value = query;
-  btn.disabled = true; out.innerHTML = '<p class="muted">🔍 Đang tìm…</p>';
+  btn.disabled = true;
+  out.innerHTML = '<p class="muted">🔍 Đang tìm…</p>';
   try{
     const r = await fetch(`${API}/search?q=${encodeURIComponent(query)}`);
     if(!r.ok) throw new Error('HTTP '+r.status);
     const list = await r.json();
     if(!list.length){
-      out.innerHTML = `<p class="err">Không tìm thấy “${esc(query)}” trong LRCLIB.</p>
-        <div class="panel"><p class="muted" style="margin-bottom:10px">Bạn có lời sẵn? Dán vào để copy / tải .txt, hoặc tìm nguồn rồi đóng góp lại.</p>
-        <button class="ghost" onclick="pasteBox()">📝 Dán lời thủ công</button>
-        <button class="ghost" onclick="window.open('https://www.google.com/search?q='+encodeURIComponent('${esc(query)} lyrics'),'_blank')">🔍 Tìm trên Google</button></div>`;
+      out.innerHTML = `<p class="err">Không tìm thấy "${esc(query)}" trong LRCLIB.</p>
+        <div class="panel">
+          <p class="muted" style="margin-bottom:10px">Bạn có lời sẵn? Dán vào để copy / tải .txt, hoặc tìm nguồn rồi đóng góp lại.</p>
+          <div class="row">
+            <button id="btn-paste">📝 Dán lời thủ công</button>
+            <button class="ghost" id="btn-google">🔍 Tìm trên Google</button>
+          </div>
+        </div>`;
+      document.getElementById('btn-paste').addEventListener('click', pasteBox);
+      document.getElementById('btn-google').addEventListener('click', ()=>window.open('https://www.google.com/search?q='+encodeURIComponent(query+' lyrics'),'_blank'));
       return;
     }
-    out.innerHTML = `<p class="muted" style="margin-bottom:10px">${list.length} kết quả · bấm để mở</p>` +
-      list.slice(0,40).map(t=>`
-        <div class="card" onclick="openTrack(${t.id})">
-          <b>${esc(t.trackName)}${t.syncedLyrics?'<span class="badge lrc">LRC</span>':t.instrumental?'<span class="badge inst">INST</span>':'<span class="badge txt">TEXT</span>'}</b>
-          <span>${esc(t.artistName)}${t.albumName?' · '+esc(t.albumName):''}${t.duration?' · '+mmss(t.duration):''}</span>
-        </div>`).join('');
+    out.innerHTML = `<p class="muted" style="margin-bottom:10px">${list.length} kết quả · bấm để mở</p><div id="list"></div>`;
+    const listEl = document.getElementById('list');
+    list.slice(0,40).forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<b>${esc(t.trackName)}${t.syncedLyrics?'<span class="badge lrc">LRC</span>':t.instrumental?'<span class="badge inst">INST</span>':'<span class="badge txt">TEXT</span>'}</b><span>${esc(t.artistName)}${t.albumName?' · '+esc(t.albumName):''}${t.duration?' · '+mmss(t.duration):''}</span>`;
+      card.addEventListener('click', ()=>openTrack(t.id));
+      listEl.appendChild(card);
+    });
   }catch(e){
     out.innerHTML = `<p class="err">Lỗi kết nối LRCLIB (${esc(e.message)}). Thử lại sau ít phút.</p>`;
   }finally{ btn.disabled = false; }
@@ -131,8 +151,12 @@ async function openTrack(id){
   try{
     const r = await fetch(`${API}/get/${id}`);
     if(!r.ok) throw new Error('HTTP '+r.status);
-    cur = await r.json(); showTS = !!cur.syncedLyrics; render();
-  }catch(e){ out.innerHTML = `<p class="err">Không tải được bài này (${esc(e.message)}).</p>`; }
+    cur = await r.json();
+    showTS = !!cur.syncedLyrics;
+    render();
+  }catch(e){
+    out.innerHTML = `<p class="err">Không tải được bài này (${esc(e.message)}).</p>`;
+  }
 }
 
 function render(){
@@ -145,29 +169,78 @@ function render(){
   if(!text){
     body = `<p class="muted">${cur.instrumental?'🎼 Bài này là nhạc không lời (instrumental).':'⚠️ Chưa có lời cho bài này.'}</p>`;
   } else if(showTS && synced){
-    body = `<div class="lyrics">` + parseLRC(synced).map(r=>
-      `<div class="stanza" onclick="copy(${JSON.stringify(r.text)},this)"><span class="ts">${fmtLRC(r.time)}</span>${esc(r.text)||'♪'}</div>`).join('') + `</div>`;
+    body = `<div class="lyrics" id="lyrics-box"></div>`;
   } else {
-    body = `<div class="lyrics">` + plain.split(/\n\s*\n/).filter(s=>s.trim()).map(s=>
-      `<div class="stanza" onclick="copy(this.innerText,this)">${esc(s)}</div>`).join('') + `</div>`;
+    body = `<div class="lyrics" id="lyrics-box"></div>`;
   }
 
   out.innerHTML = `
-    <button class="ghost sm" onclick="doSearch()" style="margin-bottom:12px">← Kết quả</button>
+    <button class="ghost sm" id="btn-back" style="margin-bottom:12px">← Kết quả</button>
     <div class="panel">
       <div class="row" style="justify-content:space-between">
         <div><b style="font-size:1.15rem">${esc(cur.trackName)}</b><br><span class="muted">${esc(cur.artistName)}${cur.duration?' · '+mmss(cur.duration):''}</span></div>
       </div>
-      <div class="row">
-        <button onclick="copy(${JSON.stringify(text)},this)">📋 Copy ${showTS&&synced?'LRC':'toàn bộ'}</button>
-        ${synced?`<button class="ghost" onclick="showTS=!showTS;render()">${showTS?'Ẩn timestamp':'Hiện timestamp'}</button>`:''}
-        ${synced?`<button class="ghost" onclick="download(${JSON.stringify(slug+'.lrc')},${JSON.stringify(synced)})">⬇ .lrc</button>
-                  <button class="ghost" onclick="download(${JSON.stringify(slug+'.srt')},toSRT(parseLRC(${JSON.stringify(synced)})))">⬇ .srt</button>`:''}
-        ${plain?`<button class="ghost" onclick="download(${JSON.stringify(slug+'.txt')},${JSON.stringify(plain)})">⬇ .txt</button>`:''}
-      </div>
+      <div class="row" id="actions"></div>
       ${body}
       <p class="muted" style="margin-top:12px">Nguồn: <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a> · Lời bài hát thuộc bản quyền tác giả. Dùng cho mục đích cá nhân / học tập.</p>
     </div>`;
+
+  document.getElementById('btn-back').addEventListener('click', ()=>doSearch());
+
+  // Render lyrics với event delegation
+  const lyricsBox = document.getElementById('lyrics-box');
+  if(showTS && synced){
+    parseLRC(synced).forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'stanza';
+      div.innerHTML = `<span class="ts">${fmtLRC(r.time)}</span>${esc(r.text)||'♪'}`;
+      div.addEventListener('click', ()=>copyText(r.text, div));
+      lyricsBox.appendChild(div);
+    });
+  } else if(plain){
+    plain.split(/\n\s*\n/).filter(s=>s.trim()).forEach(s=>{
+      const div = document.createElement('div');
+      div.className = 'stanza';
+      div.textContent = s;
+      div.addEventListener('click', ()=>copyText(s, div));
+      lyricsBox.appendChild(div);
+    });
+  }
+
+  // Render action buttons
+  const actions = document.getElementById('actions');
+  if(text){
+    const btnCopy = document.createElement('button');
+    btnCopy.textContent = `📋 Copy ${showTS&&synced?'LRC':'toàn bộ'}`;
+    btnCopy.addEventListener('click', ()=>copyText(text, btnCopy));
+    actions.appendChild(btnCopy);
+  }
+  if(synced){
+    const btnToggle = document.createElement('button');
+    btnToggle.className = 'ghost';
+    btnToggle.textContent = showTS?'Ẩn timestamp':'Hiện timestamp';
+    btnToggle.addEventListener('click', ()=>{ showTS=!showTS; render(); });
+    actions.appendChild(btnToggle);
+
+    const btnLRC = document.createElement('button');
+    btnLRC.className = 'ghost';
+    btnLRC.textContent = '⬇ .lrc';
+    btnLRC.addEventListener('click', ()=>downloadFile(slug+'.lrc', synced));
+    actions.appendChild(btnLRC);
+
+    const btnSRT = document.createElement('button');
+    btnSRT.className = 'ghost';
+    btnSRT.textContent = '⬇ .srt';
+    btnSRT.addEventListener('click', ()=>downloadFile(slug+'.srt', toSRT(parseLRC(synced))));
+    actions.appendChild(btnSRT);
+  }
+  if(plain){
+    const btnTXT = document.createElement('button');
+    btnTXT.className = 'ghost';
+    btnTXT.textContent = '⬇ .txt';
+    btnTXT.addEventListener('click', ()=>downloadFile(slug+'.txt', plain));
+    actions.appendChild(btnTXT);
+  }
 }
 
 /* ---------- paste fallback ---------- */
@@ -176,20 +249,38 @@ function pasteBox(){
     <p class="muted" style="margin-bottom:10px">Dán lời vào đây. Mỗi khổ cách nhau 1 dòng trống. Nội dung lưu trên máy bạn.</p>
     <textarea id="ta" placeholder="Dán lời bài hát…"></textarea>
     <div class="row" style="margin-top:12px">
-      <button onclick="const v=document.getElementById('ta').value.trim(); if(!v)return; cur={trackName:'Lời của bạn',artistName:'',plainLyrics:v,syncedLyrics:''}; showTS=false; render();">Xem &amp; Copy</button>
+      <button id="btn-view">Xem &amp; Copy</button>
     </div></div>`;
+  document.getElementById('btn-view').addEventListener('click', ()=>{
+    const v = document.getElementById('ta').value.trim();
+    if(!v) return;
+    cur = {trackName:'Lời của bạn', artistName:'', plainLyrics:v, syncedLyrics:''};
+    showTS = false;
+    render();
+  });
 }
 
-/* ---------- discover (không nhúng lyric nào) ---------- */
+/* ---------- discover ---------- */
 const seeds = ['yêu','mưa','love','night','nhớ','dream','buồn','home'];
-document.getElementById('chips').innerHTML = seeds.map(s=>`<span class="chip" onclick="doSearch('${s}')">${s}</span>`).join('');
+document.getElementById('chips').innerHTML = seeds.map(s=>`<span class="chip">${s}</span>`).join('');
+document.querySelectorAll('.chip').forEach((chip,i)=>{
+  chip.addEventListener('click', ()=>doSearch(seeds[i]));
+});
+
 (async()=>{
   try{
     const r = await fetch(`${API}/search?q=${encodeURIComponent(seeds[Math.floor(Math.random()*seeds.length)])}`);
     const list = (await r.json()).filter(t=>t.syncedLyrics).slice(0,8);
     if(!list.length){ out.innerHTML='<p class="muted">Nhập tên bài để bắt đầu.</p>'; return; }
-    out.innerHTML = `<p class="muted" style="margin-bottom:10px">🎧 Có sẵn LRC — thử bấm một bài</p>` +
-      list.map(t=>`<div class="card" onclick="openTrack(${t.id})"><b>${esc(t.trackName)}<span class="badge lrc">LRC</span></b><span>${esc(t.artistName)}</span></div>`).join('');
+    out.innerHTML = `<p class="muted" style="margin-bottom:10px">🎧 Có sẵn LRC — thử bấm một bài</p><div id="disc"></div>`;
+    const disc = document.getElementById('disc');
+    list.forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<b>${esc(t.trackName)}<span class="badge lrc">LRC</span></b><span>${esc(t.artistName)}</span>`;
+      card.addEventListener('click', ()=>openTrack(t.id));
+      disc.appendChild(card);
+    });
   }catch{ out.innerHTML='<p class="muted">Nhập tên bài để bắt đầu.</p>'; }
 })();
 </script>
